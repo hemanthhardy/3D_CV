@@ -1,15 +1,11 @@
 import numpy as np
 import cv2 as cv
 import glob
-
-
-
+from time import sleep
 ################ FIND CHESSBOARD CORNERS - OBJECT POINTS AND IMAGE POINTS #############################
 
-chessboardSize = (11,8)
+chessboardSize = (7,10)
 frameSize = (640,480)
-
-
 
 # termination criteria
 criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
@@ -24,24 +20,29 @@ objp[:,:2] = np.mgrid[0:chessboardSize[0],0:chessboardSize[1]].T.reshape(-1,2)
 objpoints = [] # 3d point in real world space
 imgpointsL = [] # 2d points in image plane.
 imgpointsR = [] # 2d points in image plane.
-
-
+root_dir="/home/vetri/Documents/Deep_Learning/3D_CV/StereoDepthEstimation/"
 imagesLeft = glob.glob('images/stereoLeft/*.png')
 imagesRight = glob.glob('images/stereoright/*.png')
+
 imagesLeft.sort()
 imagesRight.sort()
 #print(imagesLeft,imagesRight)
 for imgLeft, imgRight in zip(imagesLeft, imagesRight):
-
-    imgL = cv.imread(imgLeft)
-    imgR = cv.imread(imgRight)
+ 
+    imgL = cv.imread(root_dir+imgLeft)
+    imgR = cv.imread(root_dir+imgRight)
     grayL = cv.cvtColor(imgL, cv.COLOR_BGR2GRAY) 
     grayR = cv.cvtColor(imgR, cv.COLOR_BGR2GRAY)
 
     # Find the chess board corners
+    '''   cv.imshow("left",grayL)
+    cv.imshow("right",grayR)
+    cv.waitKey(0) 
+    cv.destroyAllWindows() 
+    '''
     retL, cornersL = cv.findChessboardCorners(grayL, chessboardSize, None)
     retR, cornersR = cv.findChessboardCorners(grayR, chessboardSize, None)
-
+    print(retL,retR)
     # If found, add object points, image points (after refining them)
     if retL and retR == True:
 
@@ -65,9 +66,6 @@ for imgLeft, imgRight in zip(imagesLeft, imagesRight):
 
 cv.destroyAllWindows()
 
-
-
-
 ############## CALIBRATION #######################################################
 try:
     retL, cameraMatrixL, distL, rvecsL, tvecsL = cv.calibrateCamera(objpoints, imgpointsL, frameSize, None, None)
@@ -81,7 +79,6 @@ try:
     newCameraMatrixR, roi_R = cv.getOptimalNewCameraMatrix(cameraMatrixR, distR, (widthR, heightR), 1, (widthR, heightR))
 except Exception as e:
     print(e)
-
 
 ########## Stereo Vision Calibration #############################################
 
